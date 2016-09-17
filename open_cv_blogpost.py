@@ -12,19 +12,22 @@ def midpoint(ptA, ptB):
     return ((ptA[0] + ptB[0]) * 0.5, (ptA[1] + ptB[1]) * 0.5)
 
 # construct the argument parse and parse the arguments
-print("TEST")
 ap = argparse.ArgumentParser()
 ap.add_argument("-i", "--image", required=True,
                 help="path to the input image")
 ap.add_argument("-w", "--width", type=float, required=True,
                 help="width of the left-most object in the image (in inches)")
 ap.add_argument("-s", "--size", type=float, required=True,
-                help="number of pixels to downsample to")
+                help="scale factor for resizing image")
 args = vars(ap.parse_args())
 
 # load the image, convert it to grayscale, and blur it slightly
-image = cv2.imread(args["image"])
-image = cv2.resize(image, None, fx=args["size"], fy=args["size"], interpolation=cv2.INTER_CUBIC)
+image_raw = cv2.imread(args["image"])
+image_scaled = cv2.resize(image_raw, None, fx=args["size"], fy=args["size"], interpolation=cv2.INTER_CUBIC)
+
+shape_padded = (image_scaled.shape[0] + 20, image_scaled.shape[1] + 20, image_scaled.shape[2])
+image = np.ones(shape_padded, dtype='uint8') * int(np.median(image_scaled))
+image[10:-10, 10:-10, :] = image_scaled
 
 gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 gray = cv2.GaussianBlur(gray, (15, 15), 0)
@@ -32,12 +35,14 @@ gray = cv2.GaussianBlur(gray, (15, 15), 0)
 # perform edge detection, then perform a dilation + erosion to
 # close gaps in between object edges
 edged = cv2.Canny(gray, 50, 100)
-edged = cv2.dilate(edged, None, iterations=1)
-edged = cv2.erode(edged, None, iterations=1)
+edged = cv2.dilate(edged, None, iterations=10)
+edged = cv2.erode(edged, None, iterations=10)
 
 # find contours in the edge map
-cnts = cv2.findContours(edged.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+cnts = cv2.findContours(edged.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_TC89_L1)
 cnts = cnts[0] if imutils.is_cv2() else cnts[1]
+
+# import ipdb; ipdb.set_trace()
 
 # sort the contours from left-to-right and initialize the
 # 'pixels per metric' calibration variable
@@ -47,7 +52,7 @@ pixelsPerMetric = None
 # loop over the contours individually
 for c in cnts:
     # if the contour is not sufficiently large, ignore it
-    if cv2.contourArea(c) < 100:
+    if cv2.contourArea(c) < 10:
         continue
 
     # compute the rotated bounding box of the contour
@@ -62,6 +67,7 @@ for c in cnts:
     # box
     box = perspective.order_points(box)
     cv2.drawContours(orig, [box.astype("int")], -1, (0, 255, 0), 2)
+    cv2.drawContours(orig, c, -1, (0, 255, 0), 3)
 
     # loop over the original points and draw them
     for (x, y) in box:
@@ -105,8 +111,9 @@ for c in cnts:
     cv2.putText(orig, "{:.1f}in".format(dimB), (int(trbrX + 10), int(trbrY)), cv2.FONT_HERSHEY_SIMPLEX, 0.65, (255, 255, 255), 2)
 
     # show the output image
-    cv2.namedWindow("Matches")
-    cv2.imshow("Matches", matchesImg)
-    cv2.waitKey()
+    # cv2.namedWindow("Matches")
+    # cv2.imshow("Matches", matchesImg)
+    # cv2.waitKey()
+
     cv2.imshow("Image", orig)
     cv2.waitKey(0)
