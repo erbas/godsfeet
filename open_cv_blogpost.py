@@ -25,7 +25,7 @@ args = vars(ap.parse_args())
 image = cv2.imread(args["image"])
 image = cv2.resize(image, None, fx=args["size"], fy=args["size"], interpolation=cv2.INTER_CUBIC)
 gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-gray = cv2.GaussianBlur(gray, (7, 7), 0)
+gray = cv2.GaussianBlur(gray, (15, 15), 0)
 
 # perform edge detection, then perform a dilation + erosion to
 # close gaps in between object edges
