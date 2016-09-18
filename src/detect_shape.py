@@ -26,6 +26,17 @@ def arg_flattest(contour):
     deltas = np.array(deltas)
     return np.argsort(deltas)
 
+def calc_longest_seg(contour):
+    lengths = list()
+    for i in range(len(contour)):
+        seg = (contour[i-1,:,:], contour[i,:,:])
+        length = abs(seg[0][0][0] - seg[1][0][0])
+        lengths.append(length)
+    lengths = np.array(lengths) 
+    if len(lengths) == 0:
+        raise Exception('Line lengths not found')
+    else:
+        return np.argsort(lengths)
 
 # construct the argument parse and parse the arguments
 ap = argparse.ArgumentParser()
@@ -73,6 +84,8 @@ for c in cnts[idx_max:idx_max+1]:
     # print(approx)
     # midpoints = calc_midpoints(approx)
     # print arg_flattest(approx)
+    midpoints = calc_midpoints(approx)
+
     # print("Midpoints:", calc_midpoints(approx))
 
     # multiply the contour (x, y)-coordinates by the resize ratio,
