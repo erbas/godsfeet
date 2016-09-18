@@ -41,17 +41,22 @@ cnts = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL,
 cnts = cnts[0] if imutils.is_cv2() else cnts[1]
 sd = ShapeDetector()
 
-# loop over the contours
+peris = []
+# We want the biggest contour (the foot)
 for c in cnts:
+    peris.append(cv2.arcLength(c, True))
+idx_max = np.argmax(np.array(peris))
+# loop over the contours
+for c in cnts[idx_max:idx_max+1]:
     # compute the center of the contour, then detect the name of the
     # shape using only the contour
     M = cv2.moments(c)
     cX = int((M["m10"] / M["m00"]) * ratio)
     cY = int((M["m01"] / M["m00"]) * ratio)
     shape, approx = sd.detect(c)
-    print(approx)
+    # print(approx)
     midpoints = calc_midpoints(approx)
-    print("Midpoints:", calc_midpoints(approx))
+    # print("Midpoints:", calc_midpoints(approx))
 
     # multiply the contour (x, y)-coordinates by the resize ratio,
     # then draw the contours and the name of the shape on the image
