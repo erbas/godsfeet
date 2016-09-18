@@ -42,6 +42,8 @@ def closest_line(coin_loc, contours):
 	contours = [list(i) for i in contours]
 	print contours
 	for i, coord in enumerate(contours):
+		print list(coord)
+		print coord
 		#x,y = coord
 		#dist = sqrt((cx-x)**2 + (cy-y)**2)
 		dist = abs((contours[i+1][1] - contours[i][1])*cx-(contours[i+1][0] - contours[i][0]*cy)\
@@ -71,7 +73,7 @@ for c in cnts:
 	c *= ratio
 	c = c.astype("int")
 	
-	#print closest_line((1,1), c)
+	print closest_line((1,1), c)
 	
 	
 	cv2.drawContours(image, [c], -1, (0, 255, 0), 2)
