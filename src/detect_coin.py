@@ -1,6 +1,11 @@
 # import the necessary packages
+import numpy as np
 import cv2
 import imutils
+
+
+def midpoint(ptA, ptB):
+    return ((ptA[0] + ptB[0]) * 0.5, (ptA[1] + ptB[1]) * 0.5)
 
 
 class CoinDetector:
@@ -13,19 +18,26 @@ class CoinDetector:
         edged = cv2.erode(edged, None, iterations=10)
         cnts = cv2.findContours(edged, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         self.cnts = cnts[0] if imutils.is_cv2() else cnts[1]
-        self.run()
 
     def run(self):
         '''main method, becaue init cannot return a value'''
         circles = []
+        roundness = []
         for c in self.cnts:
             shape, approx = self.detect(c)
-            print shape, len(approx)
             if shape == 'circle':
+                # baryentre of the contour
+                cx, cy = c[:, :, 0].mean(), c[:, :, 1].mean()
+                # calc disctance to all contour points
+                dist_var = np.std(np.sqrt((c[:, 0, 0] - cx)**2 + (c[:, 0, 1] - cy)**2))
+                roundness.append(dist_var)
                 circles.append(approx)
+                # import ipdb; ipdb.set_trace()
+                # print shape, "|", cx, cy, "|", dist_var
 
         # import ipdb; ipdb.set_trace()
-        return circles
+        # print "roundest circle: ", np.argmin(roudness)
+        return circles[np.argmin(roundness)]
 
     def detect(self, c):
         """
@@ -36,7 +48,7 @@ class CoinDetector:
         # initialize the shape name and approximate the contour
         shape = "unidentified"
         peri = cv2.arcLength(c, True)
-        roughness = 0.001 * peri
+        roughness = 0.04 * peri
         approx = cv2.approxPolyDP(c, roughness, True)
 
         # if the shape is a triangle, it will have 3 vertices
@@ -60,7 +72,7 @@ class CoinDetector:
             shape = "pentagon"
 
         # otherwise, we assume the shape is a circle
-        else:
+        elif len(approx) > 5:
             shape = "circle"
 
         # return the name of the shape

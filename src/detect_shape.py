@@ -4,6 +4,7 @@ from shapedetector import ShapeDetector
 from detect_coin import CoinDetector
 import argparse
 import imutils
+from imutils import perspective
 import cv2
 
 
@@ -67,11 +68,8 @@ resized = imutils.resize(image, width=300)
 ratio = image.shape[0] / float(resized.shape[0])
 
 # find the coin
-coins = CoinDetector(final_display).run()
-for x in coins:
-    cv2.drawContours(final_display, [(x.astype('float')*ratio).astype('int')], -1, (255, 0, 0), 2)
-cv2.imshow("Image", final_display)
-cv2.waitKey(0)
+CD = CoinDetector(image)
+coins = CD.run()
 
 
 # convert the resized image to grayscale, blur it slightly,
@@ -126,6 +124,26 @@ for c in cnts[idx_max:idx_max+1]:
     cv2.drawContours(final_display, [(approx.astype('float')*ratio).astype('int')], -1, (0, 255, 0), 2)
     # cv2.drawContours(final_display, [(midpoints.astype('float')*ratio).astype('int')], -1, (0, 255, 0), 2)
     cv2.putText(final_display, shape, (cX, cY), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+
+    # import ipdb; ipdb.set_trace()
+    for x in coins:
+        print x
+        # cv2.drawContours(final_display, [(x*ratio).astype('int')], -1, (0, 255, 0), 2)
+
+        # draw box around circles
+        box = cv2.minAreaRect(x)
+        box = cv2.cv.BoxPoints(box) if imutils.is_cv2() else cv2.boxPoints(box)
+        box = np.array(box, dtype="int")
+
+        # order the points in the contour such that they appear
+        # in top-left, top-right, bottom-right, and bottom-left
+        # order, then draw the outline of the rotated bounding
+        # box
+        box = perspective.order_points(box)
+        cv2.drawContours(final_display, [box.astype("int")], -1, (255, 0, 0), 2)
+        cv2.drawContours(final_display, x, -1, (0, 0, 255), 3)
+
+
 
     # show the output image
     cv2.imshow("Image", final_display)
