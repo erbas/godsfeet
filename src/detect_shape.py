@@ -13,6 +13,33 @@ def calc_midpoints(contour):
     midpoints = np.array(midpoints)
     return midpoints
 
+def arg_flattest(contour):
+    """
+    returns the indices for the sorted most horizontal segments
+    :param contour:
+    :return:
+    """
+    deltas = []
+    for i in range(len(contour)):
+        delta_y = abs(contour[i-1,:,1]-contour[i,:,1])
+        deltas.append(delta_y[0])
+    deltas = np.array(deltas)
+    return np.argsort(deltas)
+
+def calc_longest_seg(contour):
+    # Returns an array of the indicies
+    # of the longest line segments
+    lengths = list()
+    for i in range(len(contour)):
+        seg = (contour[i-1,:,:], contour[i,:,:])
+        length = abs(seg[0][0][0] - seg[1][0][0])
+        lengths.append(length)
+    lengths = np.array(lengths) 
+    if len(lengths) == 0:
+        raise Exception('Line lengths not found')
+    else:
+        return np.argsort(lengths)
+
 # construct the argument parse and parse the arguments
 ap = argparse.ArgumentParser()
 ap.add_argument("-i", "--image", required=True,
@@ -57,7 +84,10 @@ for c in cnts[idx_max:idx_max+1]:
     cY = int((M["m01"] / M["m00"]) * ratio)
     shape, approx = sd.detect(c)
     # print(approx)
+    # midpoints = calc_midpoints(approx)
+    # print arg_flattest(approx)
     midpoints = calc_midpoints(approx)
+
     # print("Midpoints:", calc_midpoints(approx))
 
     # multiply the contour (x, y)-coordinates by the resize ratio,
@@ -67,7 +97,7 @@ for c in cnts[idx_max:idx_max+1]:
     c = c.astype("int")
     # cv2.drawContours(image, [c], -1, (0, 255, 0), 2)
     cv2.drawContours(final_display, [(approx.astype('float')*ratio).astype('int')], -1, (0, 255, 0), 2)
-    cv2.drawContours(final_display, [(midpoints.astype('float')*ratio).astype('int')], -1, (0, 255, 0), 2)
+    # cv2.drawContours(final_display, [(midpoints.astype('float')*ratio).astype('int')], -1, (0, 255, 0), 2)
     cv2.putText(final_display, shape, (cX, cY), cv2.FONT_HERSHEY_SIMPLEX,
         0.5, (255, 255, 255), 2)
 
