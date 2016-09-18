@@ -1,11 +1,19 @@
 # import the necessary packages
 import numpy as np
-from shapedetector import ShapeDetector
-from detect_coin import CoinDetector
+from scipy.spatial import distance as dist
 import argparse
 import imutils
 from imutils import perspective
 import cv2
+from shapedetector import ShapeDetector
+from detect_coin import CoinDetector
+
+#  coin diameters in millimeters
+coin_dims = {"euro1": 23.5}
+
+
+def midpoint(ptA, ptB):
+    return ((ptA[0] + ptB[0]) * 0.5, (ptA[1] + ptB[1]) * 0.5)
 
 
 def calc_midpoints(contour):
@@ -135,6 +143,16 @@ for c in cnts[idx_max:idx_max+1]:
     # order, then draw the outline of the rotated bounding
     # box
     box = perspective.order_points(box)
+    (tl, tr, br, bl) = box
+    (tltrX, tltrY) = midpoint(tl, tr)
+    (blbrX, blbrY) = midpoint(bl, br)
+    (tlblX, tlblY) = midpoint(tl, bl)
+    (trbrX, trbrY) = midpoint(tr, br)
+    dB = dist.euclidean((tlblX, tlblY), (trbrX, trbrY))
+    scale_factor = dB / coin_dims['euro1']
+    print "pixels per millimetre", scale_factor
+
+    # draw the coin and the box around it 
     cv2.drawContours(final_display, [box.astype("int")], -1, (255, 0, 0), 2)
     cv2.drawContours(final_display, coins, -1, (0, 0, 255), 3)
 
