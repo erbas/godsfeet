@@ -110,6 +110,7 @@ for c in cnts[idx_max:idx_max+1]:
     x_third = calc_third_point((x1, x2))
     x_t_display = ((x_third*ratio).astype('int'))
     print x_t_display
+    # Display the circle
     cv2.circle(final_display, (x_t_display[0], x_t_display[1]), 23, (0,0,255), -1)
     # longst_seg = approx[i-1]
     # midpoints = calc_midpoints(approx)
