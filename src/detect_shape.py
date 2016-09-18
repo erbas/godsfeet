@@ -13,6 +13,20 @@ def calc_midpoints(contour):
     midpoints = np.array(midpoints)
     return midpoints
 
+def arg_flattest(contour):
+    """
+    returns the indices for the sorted most horizontal segments
+    :param contour:
+    :return:
+    """
+    deltas = []
+    for i in range(len(contour)):
+        delta_y = abs(contour[i-1,:,1]-contour[i,:,1])
+        deltas.append(delta_y[0])
+    deltas = np.array(deltas)
+    return np.argsort(deltas)
+
+
 # construct the argument parse and parse the arguments
 ap = argparse.ArgumentParser()
 ap.add_argument("-i", "--image", required=True,
@@ -57,7 +71,8 @@ for c in cnts[idx_max:idx_max+1]:
     cY = int((M["m01"] / M["m00"]) * ratio)
     shape, approx = sd.detect(c)
     # print(approx)
-    midpoints = calc_midpoints(approx)
+    # midpoints = calc_midpoints(approx)
+    # print arg_flattest(approx)
     # print("Midpoints:", calc_midpoints(approx))
 
     # multiply the contour (x, y)-coordinates by the resize ratio,
