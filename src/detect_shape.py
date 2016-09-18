@@ -125,23 +125,18 @@ for c in cnts[idx_max:idx_max+1]:
     # cv2.drawContours(final_display, [(midpoints.astype('float')*ratio).astype('int')], -1, (0, 255, 0), 2)
     cv2.putText(final_display, shape, (cX, cY), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
 
-    # import ipdb; ipdb.set_trace()
-    for x in coins:
-        print x
-        # cv2.drawContours(final_display, [(x*ratio).astype('int')], -1, (0, 255, 0), 2)
+    # draw box around circles
+    box = cv2.minAreaRect(coins)
+    box = cv2.cv.BoxPoints(box) if imutils.is_cv2() else cv2.boxPoints(box)
+    box = np.array(box, dtype="int")
 
-        # draw box around circles
-        box = cv2.minAreaRect(x)
-        box = cv2.cv.BoxPoints(box) if imutils.is_cv2() else cv2.boxPoints(box)
-        box = np.array(box, dtype="int")
-
-        # order the points in the contour such that they appear
-        # in top-left, top-right, bottom-right, and bottom-left
-        # order, then draw the outline of the rotated bounding
-        # box
-        box = perspective.order_points(box)
-        cv2.drawContours(final_display, [box.astype("int")], -1, (255, 0, 0), 2)
-        cv2.drawContours(final_display, x, -1, (0, 0, 255), 3)
+    # order the points in the contour such that they appear
+    # in top-left, top-right, bottom-right, and bottom-left
+    # order, then draw the outline of the rotated bounding
+    # box
+    box = perspective.order_points(box)
+    cv2.drawContours(final_display, [box.astype("int")], -1, (255, 0, 0), 2)
+    cv2.drawContours(final_display, coins, -1, (0, 0, 255), 3)
 
 
 
