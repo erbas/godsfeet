@@ -12,10 +12,12 @@ class CoinDetector:
     def __init__(self, image):
         self.image = image
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        gray = cv2.GaussianBlur(gray, (15, 15), 0)
+        gray = cv2.GaussianBlur(gray, (3, 3), 0)
         edged = cv2.Canny(gray, 20, 60)
-        edged = cv2.dilate(edged, None, iterations=10)
-        edged = cv2.erode(edged, None, iterations=10)
+        edged = cv2.dilate(edged, None, iterations=3)
+        edged = cv2.erode(edged, None, iterations=3)
+        #cv2.imshow("Image", edged)
+        #cv2.waitKey(0)
         cnts = cv2.findContours(edged, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         self.cnts = cnts[0] if imutils.is_cv2() else cnts[1]
 
