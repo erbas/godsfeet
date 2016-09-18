@@ -61,6 +61,14 @@ image = 255 - image
 resized = imutils.resize(image, width=300)
 ratio = image.shape[0] / float(resized.shape[0])
 
+# find the coin
+coins = CoinDetector(final_display).run()
+for x in coins:
+    cv2.drawContours(final_display, [(x.astype('float')*ratio).astype('int')], -1, (255, 0, 0), 2)
+    cv2.imshow("Image", final_display)
+    cv2.waitKey(0)
+
+
 # convert the resized image to grayscale, blur it slightly,
 # and threshold it
 gray = cv2.cvtColor(resized, cv2.COLOR_BGR2GRAY)

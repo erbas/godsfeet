@@ -1,10 +1,31 @@
 # import the necessary packages
 import cv2
+import imutils
 
 
 class CoinDetector:
-    def __init__(self):
-        pass
+    def __init__(self, image):
+        self.image = image
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        gray = cv2.GaussianBlur(gray, (15, 15), 0)
+        edged = cv2.Canny(gray, 20, 60)
+        edged = cv2.dilate(edged, None, iterations=10)
+        edged = cv2.erode(edged, None, iterations=10)
+        cnts = cv2.findContours(edged, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        self.cnts = cnts[0] if imutils.is_cv2() else cnts[1]
+        self.run()
+
+    def run(self):
+        '''main method, becaue init cannot return a value'''
+        circles = []
+        for c in self.cnts:
+            shape, approx = self.detect(c)
+            print shape, len(approx)
+            if shape == 'circle':
+                circles.append(approx)
+
+        # import ipdb; ipdb.set_trace()
+        return circles
 
     def detect(self, c):
         """
