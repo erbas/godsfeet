@@ -58,6 +58,32 @@ def calc_third_point(seg):
     x1, x2 = seg[0], seg[1]
     return np.array(2*x1/3. + x2/3.)
 
+def seg_rot_90(seg_in, pivot_point=None):
+    # x1, x2 = seg_in[0], seg_in[1]
+    # ang_coeff = x2 - x1
+    # ang_coeff = ang_coeff[:,1] / float(ang_coeff[:,0])
+    # ang_coeff = ang_coeff[0]
+    # First we cut the excessive 1/3 of the segment
+    # print "seg_in", seg_in
+    # print "seg_in", seg_in[:,:,1]
+    # t2_point = seg_in[0]/3. + 2*seg_in[1]/2.
+    # print "t2_point:", t2_point
+    # seg_in = np.array([[seg_in[:,0,0]],[t2_point]])
+    # print "seg_in", seg_in
+    seg_center = seg_in - pivot_point
+    # print "pivot_point", pivot_point
+    # print "seg_in", seg_in
+    # print "seg_center", seg_center
+    mat_rot_90 = np.array([[0., -1.], [1., 0.]])
+    # for x in seg_in[:,0,:]:
+    #     print np.dot(x, mat_rot_90)
+    seg_rotated = np.dot(seg_center[:,0,:], mat_rot_90)
+    # print "seg_rotated", seg_rotated
+    seg_rotated += pivot_point
+    # print seg_rotated
+    # print "test2", np.dot([[0, 0],[1, 1]], mat_rot_90)
+    return seg_rotated.astype('int')
+
 # construct the argument parse and parse the arguments
 ap = argparse.ArgumentParser()
 ap.add_argument("-i", "--image", required=True,
@@ -98,6 +124,7 @@ for c in cnts:
     peris.append(cv2.arcLength(c, True))
 idx_max = np.argmax(np.array(peris))
 # loop over the contours
+
 for c in cnts[idx_max:idx_max+1]:
     # compute the center of the contour, then detect the name of the
     # shape using only the contour
@@ -112,12 +139,18 @@ for c in cnts[idx_max:idx_max+1]:
     idx_longest = calc_longest_seg(approx)[0]
     x1 = approx[idx_longest-1, 0]
     x2 = approx[idx_longest, 0]
-    # print x1
+    seg_longest = approx[idx_longest-1:idx_longest+1]
+    # print seg_longest
     x_third = calc_third_point((x1, x2))
     x_t_display = ((x_third*ratio).astype('int'))
     # print x_t_display
     # Display the circle
     cv2.circle(final_display, (x_t_display[0], x_t_display[1]), 23, (0,0,255), -1)
+    seg_perp = seg_rot_90(seg_longest, x_third)
+    cv2.drawContours(final_display, [(seg_perp.astype('float')*ratio).astype('int')], -1, (0, 255, 0), 2)
+    # t2_point = seg_longest[0]/3. + 2*seg_longest[1]/2.
+    # t2_point = t2_point.astype('int')
+    # cv2.circle(final_display, (t2_point[0], t2_point[1]), 23, (0,0,255), -1)
     # longst_seg = approx[i-1]
     # midpoints = calc_midpoints(approx)
 
