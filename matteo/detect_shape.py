@@ -5,6 +5,14 @@ import argparse
 import imutils
 import cv2
 
+def calc_midpoints(contour):
+    midpoints = []
+    for i in range(len(contour)):
+        mid = (contour[i-1,:,:]+contour[i,:,:])/2
+        midpoints.append(mid)
+    midpoints = np.array(midpoints)
+    return midpoints
+
 # construct the argument parse and parse the arguments
 ap = argparse.ArgumentParser()
 ap.add_argument("-i", "--image", required=True,
@@ -41,6 +49,9 @@ for c in cnts:
     cX = int((M["m10"] / M["m00"]) * ratio)
     cY = int((M["m01"] / M["m00"]) * ratio)
     shape, approx = sd.detect(c)
+    print(approx)
+    midpoints = calc_midpoints(approx)
+    print("Midpoints:", calc_midpoints(approx))
 
     # multiply the contour (x, y)-coordinates by the resize ratio,
     # then draw the contours and the name of the shape on the image
@@ -49,6 +60,7 @@ for c in cnts:
     c = c.astype("int")
     # cv2.drawContours(image, [c], -1, (0, 255, 0), 2)
     cv2.drawContours(image, [(approx.astype('float')*ratio).astype('int')], -1, (0, 255, 0), 2)
+    cv2.drawContours(image, [(midpoints.astype('float')*ratio).astype('int')], -1, (0, 255, 0), 2)
     cv2.putText(image, shape, (cX, cY), cv2.FONT_HERSHEY_SIMPLEX,
         0.5, (255, 255, 255), 2)
 
