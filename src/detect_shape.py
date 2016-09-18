@@ -10,7 +10,7 @@ import cv2
 def calc_midpoints(contour):
     midpoints = []
     for i in range(len(contour)):
-        mid = (contour[i-1,:,:]+contour[i,:,:])/2
+        mid = (contour[i-1, :, :]+contour[i, :, :])/2
         midpoints.append(mid)
     midpoints = np.array(midpoints)
     return midpoints
@@ -24,7 +24,7 @@ def arg_flattest(contour):
     """
     deltas = []
     for i in range(len(contour)):
-        delta_y = abs(contour[i-1,:,1]-contour[i,:,1])
+        delta_y = abs(contour[i-1, :, 1] - contour[i, :, 1])
         deltas.append(delta_y[0])
     deltas = np.array(deltas)
     return np.argsort(deltas)
@@ -35,7 +35,7 @@ def calc_longest_seg(contour):
     # of the longest line segments
     lengths = list()
     for i in range(len(contour)):
-        seg = (contour[i-1,:,:], contour[i,:,:])
+        seg = (contour[i-1, :, :], contour[i, :, :])
         length = np.linalg.norm(seg[0][0] - seg[1][0])
         lengths.append(length)
     lengths = np.array(lengths)
@@ -70,8 +70,8 @@ ratio = image.shape[0] / float(resized.shape[0])
 coins = CoinDetector(final_display).run()
 for x in coins:
     cv2.drawContours(final_display, [(x.astype('float')*ratio).astype('int')], -1, (255, 0, 0), 2)
-    cv2.imshow("Image", final_display)
-    cv2.waitKey(0)
+cv2.imshow("Image", final_display)
+cv2.waitKey(0)
 
 
 # convert the resized image to grayscale, blur it slightly,
@@ -104,11 +104,14 @@ for c in cnts[idx_max:idx_max+1]:
     # print " flattest", arg_flattest(approx)
     print " indices of longest segments: ", calc_longest_seg(approx)
     idx_longest = calc_longest_seg(approx)[0]
-    x1 = approx[idx_longest-1,0]
-    x2 = approx[idx_longest,0]
+    x1 = approx[idx_longest-1, 0]
+    x2 = approx[idx_longest, 0]
     # print x1
     x_third = calc_third_point((x1, x2))
-    # cv2.circle(final_display, [(x_third.astype('float')*ratio).astype('int')], 10) #, -1, (0, 255, 0), 2)
+    x_t_display = ((x_third*ratio).astype('int'))
+    print x_t_display
+    # Display the circle
+    cv2.circle(final_display, (x_t_display[0], x_t_display[1]), 23, (0,0,255), -1)
     # longst_seg = approx[i-1]
     # midpoints = calc_midpoints(approx)
 
@@ -122,8 +125,7 @@ for c in cnts[idx_max:idx_max+1]:
     # cv2.drawContours(image, [c], -1, (0, 255, 0), 2)
     cv2.drawContours(final_display, [(approx.astype('float')*ratio).astype('int')], -1, (0, 255, 0), 2)
     # cv2.drawContours(final_display, [(midpoints.astype('float')*ratio).astype('int')], -1, (0, 255, 0), 2)
-    cv2.putText(final_display, shape, (cX, cY), cv2.FONT_HERSHEY_SIMPLEX,
-        0.5, (255, 255, 255), 2)
+    cv2.putText(final_display, shape, (cX, cY), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
 
     # show the output image
     cv2.imshow("Image", final_display)
