@@ -82,8 +82,7 @@ thresh = cv2.threshold(blurred,  90, 255, cv2.THRESH_BINARY)[1]
 
 # find contours in the thresholded image and initialize the
 # shape detector
-cnts = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL,
-    cv2.CHAIN_APPROX_SIMPLE)
+cnts = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 cnts = cnts[0] if imutils.is_cv2() else cnts[1]
 sd = ShapeDetector()
 
