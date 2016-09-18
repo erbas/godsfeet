@@ -1,9 +1,11 @@
 # import the necessary packages
 import numpy as np
 from shapedetector import ShapeDetector
+from detect_coin import CoinDetector
 import argparse
 import imutils
 import cv2
+
 
 def calc_midpoints(contour):
     midpoints = []
@@ -12,6 +14,7 @@ def calc_midpoints(contour):
         midpoints.append(mid)
     midpoints = np.array(midpoints)
     return midpoints
+
 
 def arg_flattest(contour):
     """
@@ -26,6 +29,7 @@ def arg_flattest(contour):
     deltas = np.array(deltas)
     return np.argsort(deltas)
 
+
 def calc_longest_seg(contour):
     # Returns an array of the indicies
     # of the longest line segments
@@ -34,11 +38,12 @@ def calc_longest_seg(contour):
         seg = (contour[i-1,:,:], contour[i,:,:])
         length = np.linalg.norm(seg[0][0] - seg[1][0])
         lengths.append(length)
-    lengths = np.array(lengths) 
+    lengths = np.array(lengths)
     if len(lengths) == 0:
         raise Exception('Line lengths not found')
     else:
         return np.argsort(lengths)[::-1]
+
 
 def calc_third_point(seg):
     x1, x2 = seg[0], seg[1]
