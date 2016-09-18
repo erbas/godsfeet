@@ -39,7 +39,7 @@ def closest_line(coin_loc, contours):
 	cx, cy = coin_loc
 	distances = list()
 
-	contours = list(contours)
+	contours = [list(i) for i in contours]
 	print contours
 	for i, coord in enumerate(contours):
 		#x,y = coord
