@@ -71,7 +71,7 @@ for c in cnts:
 	c *= ratio
 	c = c.astype("int")
 	
-	print closest_line((1,1), c)
+	#print closest_line((1,1), c)
 	
 	
 	cv2.drawContours(image, [c], -1, (0, 255, 0), 2)
