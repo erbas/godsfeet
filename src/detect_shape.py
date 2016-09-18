@@ -23,7 +23,9 @@ args = vars(ap.parse_args())
 # the shapes can be approximated better
 image_tmp = cv2.imread(args["image"])
 image = imutils.resize(image_tmp, width=1000)
+final_display = image
 image = 255 - image
+
 # image = cv2.imread(args["image"])
 resized = imutils.resize(image, width=300)
 ratio = image.shape[0] / float(resized.shape[0])
@@ -64,11 +66,11 @@ for c in cnts[idx_max:idx_max+1]:
     c *= ratio
     c = c.astype("int")
     # cv2.drawContours(image, [c], -1, (0, 255, 0), 2)
-    cv2.drawContours(image, [(approx.astype('float')*ratio).astype('int')], -1, (0, 255, 0), 2)
-    cv2.drawContours(image, [(midpoints.astype('float')*ratio).astype('int')], -1, (0, 255, 0), 2)
-    cv2.putText(image, shape, (cX, cY), cv2.FONT_HERSHEY_SIMPLEX,
+    cv2.drawContours(final_display, [(approx.astype('float')*ratio).astype('int')], -1, (0, 255, 0), 2)
+    cv2.drawContours(final_display, [(midpoints.astype('float')*ratio).astype('int')], -1, (0, 255, 0), 2)
+    cv2.putText(final_display, shape, (cX, cY), cv2.FONT_HERSHEY_SIMPLEX,
         0.5, (255, 255, 255), 2)
 
     # show the output image
-    cv2.imshow("Image", image)
+    cv2.imshow("Image", final_display)
     cv2.waitKey(0)
