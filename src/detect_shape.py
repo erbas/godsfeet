@@ -27,6 +27,8 @@ def arg_flattest(contour):
     return np.argsort(deltas)
 
 def calc_longest_seg(contour):
+    # Returns an array of the indicies
+    # of the longest line segments
     lengths = list()
     for i in range(len(contour)):
         seg = (contour[i-1,:,:], contour[i,:,:])
