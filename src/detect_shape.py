@@ -40,6 +40,10 @@ def calc_longest_seg(contour):
     else:
         return np.argsort(lengths)[::-1]
 
+def calc_third_point(seg):
+    x1, x2 = seg[0], seg[1]
+    return np.array(2*x1/3. + x2/3.)
+
 # construct the argument parse and parse the arguments
 ap = argparse.ArgumentParser()
 ap.add_argument("-i", "--image", required=True,
@@ -86,8 +90,15 @@ for c in cnts[idx_max:idx_max+1]:
     # print(approx)
     # midpoints = calc_midpoints(approx)
     # print " flattest", arg_flattest(approx)
-    print " longest", calc_longest_seg(approx)
-    midpoints = calc_midpoints(approx)
+    print " indices of longest segments: ", calc_longest_seg(approx)
+    idx_longest = calc_longest_seg(approx)[0]
+    x1 = approx[idx_longest-1,0]
+    x2 = approx[idx_longest,0]
+    # print x1
+    x_third = calc_third_point((x1, x2))
+    # cv2.circle(final_display, [(x_third.astype('float')*ratio).astype('int')], 10) #, -1, (0, 255, 0), 2)
+    # longst_seg = approx[i-1]
+    # midpoints = calc_midpoints(approx)
 
     # print("Midpoints:", calc_midpoints(approx))
 
