@@ -11,8 +11,8 @@ class ShapeDetector:
         shape = "unidentified"
         peri = cv2.arcLength(c, True)
         approx = cv2.approxPolyDP(c, 0.04 * peri, True)
+        #print approx
 
-        # print approx
 
         # if the shape is a pentagon, it will have 5 vertices
         if len(approx) <= 7 and len(approx) >= 5:
@@ -24,3 +24,4 @@ class ShapeDetector:
 
         # return the name of the shape
         return shape
+
