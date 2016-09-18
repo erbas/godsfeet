@@ -102,14 +102,14 @@ for c in cnts[idx_max:idx_max+1]:
     # print(approx)
     # midpoints = calc_midpoints(approx)
     # print " flattest", arg_flattest(approx)
-    print " indices of longest segments: ", calc_longest_seg(approx)
+    # print " indices of longest segments: ", calc_longest_seg(approx)
     idx_longest = calc_longest_seg(approx)[0]
     x1 = approx[idx_longest-1, 0]
     x2 = approx[idx_longest, 0]
     # print x1
     x_third = calc_third_point((x1, x2))
     x_t_display = ((x_third*ratio).astype('int'))
-    print x_t_display
+    # print x_t_display
     # Display the circle
     cv2.circle(final_display, (x_t_display[0], x_t_display[1]), 23, (0,0,255), -1)
     # longst_seg = approx[i-1]
