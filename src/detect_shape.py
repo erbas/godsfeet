@@ -67,7 +67,7 @@ for c in cnts[idx_max:idx_max+1]:
     c = c.astype("int")
     # cv2.drawContours(image, [c], -1, (0, 255, 0), 2)
     cv2.drawContours(final_display, [(approx.astype('float')*ratio).astype('int')], -1, (0, 255, 0), 2)
-    cv2.drawContours(final_display, [(midpoints.astype('float')*ratio).astype('int')], -1, (0, 255, 0), 2)
+    # cv2.drawContours(final_display, [(midpoints.astype('float')*ratio).astype('int')], -1, (0, 255, 0), 2)
     cv2.putText(final_display, shape, (cX, cY), cv2.FONT_HERSHEY_SIMPLEX,
         0.5, (255, 255, 255), 2)
 
