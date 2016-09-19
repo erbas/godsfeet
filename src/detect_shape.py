@@ -59,30 +59,20 @@ def calc_third_point(seg):
     return np.array(2*x1/3. + x2/3.)
 
 def seg_rot_90(seg_in, pivot_point=None):
-    # x1, x2 = seg_in[0], seg_in[1]
-    # ang_coeff = x2 - x1
-    # ang_coeff = ang_coeff[:,1] / float(ang_coeff[:,0])
-    # ang_coeff = ang_coeff[0]
-    # First we cut the excessive 1/3 of the segment
-    # print "seg_in", seg_in
-    # print "seg_in", seg_in[:,:,1]
-    # t2_point = seg_in[0]/3. + 2*seg_in[1]/2.
-    # print "t2_point:", t2_point
-    # seg_in = np.array([[seg_in[:,0,0]],[t2_point]])
-    # print "seg_in", seg_in
     seg_center = seg_in - pivot_point
-    # print "pivot_point", pivot_point
-    # print "seg_in", seg_in
-    # print "seg_center", seg_center
     mat_rot_90 = np.array([[0., -1.], [1., 0.]])
-    # for x in seg_in[:,0,:]:
-    #     print np.dot(x, mat_rot_90)
     seg_rotated = np.dot(seg_center[:,0,:], mat_rot_90)
-    # print "seg_rotated", seg_rotated
     seg_rotated += pivot_point
-    # print seg_rotated
-    # print "test2", np.dot([[0, 0],[1, 1]], mat_rot_90)
     return seg_rotated.astype('int')
+
+def ang_coeff(segment):
+    den = seg_longest[1,0,0] - seg_longest[0,0,0]
+    nom = seg_longest[1,0,1] - seg_longest[0,0,1]
+    ang_coeff = np.arctan(nom/den)
+    return ang_coeff
+
+
+# PROGRAM START
 
 # construct the argument parse and parse the arguments
 ap = argparse.ArgumentParser()
@@ -133,17 +123,16 @@ for c in cnts[idx_max:idx_max+1]:
     cY = int((M["m01"] / M["m00"]) * ratio)
     shape, approx = sd.detect(c)
     # print(approx)
+    # this function calculates the middle points of each segment
     # midpoints = calc_midpoints(approx)
-    # print " flattest", arg_flattest(approx)
-    # print " indices of longest segments: ", calc_longest_seg(approx)
+    # This function returns the indices of the longest segment in the contour
     idx_longest = calc_longest_seg(approx)[0]
     x1 = approx[idx_longest-1, 0]
     x2 = approx[idx_longest, 0]
+    # print approx[0]
     seg_longest = approx[idx_longest-1:idx_longest+1]
-    # print seg_longest
     x_third = calc_third_point((x1, x2))
     x_t_display = ((x_third*ratio).astype('int'))
-    # print x_t_display
     # Display the circle
     cv2.circle(final_display, (x_t_display[0], x_t_display[1]), 23, (0,0,255), -1)
     seg_perp = seg_rot_90(seg_longest, x_third)
@@ -151,17 +140,34 @@ for c in cnts[idx_max:idx_max+1]:
     # t2_point = seg_longest[0]/3. + 2*seg_longest[1]/2.
     # t2_point = t2_point.astype('int')
     # cv2.circle(final_display, (t2_point[0], t2_point[1]), 23, (0,0,255), -1)
+    rows,cols,ch = image.shape
+    ang_c = ang_coeff(seg_longest)
+
+    print "Angular coefficient: ", ang_c
+    # Here we try to make the longest segment horizontal by rotating the image (???)
+    # M = cv2.getRotationMatrix2D((x_third[0], x_third[1]),np.pi*ang_c,1)
+    # print M
+    # resized = cv2.warpAffine(resized,M,(cols,rows))
+    # cv2.imshow("Image", dst)
+    # cv2.waitKey(0)
     # longst_seg = approx[i-1]
     # midpoints = calc_midpoints(approx)
 
     # print("Midpoints:", calc_midpoints(approx))
+
+    # Let's find the leftmost point on the contour
+    # Which means we assume the tip of the foot is on the LEFT!!!
+    leftmost = c[np.argmin(c[:,0,0])] # We detect the lowest x value
+    print " Leftmost point on the high-poly contour: ", leftmost
+
+
 
     # multiply the contour (x, y)-coordinates by the resize ratio,
     # then draw the contours and the name of the shape on the image
     c = c.astype("float")
     c *= ratio
     c = c.astype("int")
-    # cv2.drawContours(image, [c], -1, (0, 255, 0), 2)
+    cv2.drawContours(final_display, [c], -1, (255, 0, 255), 2)
     cv2.drawContours(final_display, [(approx.astype('float')*ratio).astype('int')], -1, (0, 255, 0), 2)
     # cv2.drawContours(final_display, [(midpoints.astype('float')*ratio).astype('int')], -1, (0, 255, 0), 2)
     cv2.putText(final_display, shape, (cX, cY), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
