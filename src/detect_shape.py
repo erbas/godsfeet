@@ -159,6 +159,10 @@ for c in cnts[idx_max:idx_max+1]:
     # Which means we assume the tip of the foot is on the LEFT!!!
     leftmost = c[np.argmin(c[:,0,0])] # We detect the lowest x value
     print " Leftmost point on the high-poly contour: ", leftmost
+    # produce a segment shifting seg_longest to the point just found
+    print "seg_longest       ",    seg_longest
+    print "leftmost          ",    leftmost
+    print "seg_longest - leftmost",seg_longest[0] - leftmost
 
 
 
