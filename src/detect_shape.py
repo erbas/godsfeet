@@ -8,8 +8,14 @@ import cv2
 from shapedetector import ShapeDetector
 from detect_coin import CoinDetector
 
+import matplotlib.pyplot as plt
+
 #  coin diameters in millimeters
-coin_dims = {"euro1": 23.5}
+coin_dims = {
+    "2 Euro": 25.75,
+    "1 Euro": 23.25,
+    "50 Euro Cent": 24.25,
+}
 
 
 def midpoint(ptA, ptB):
@@ -61,16 +67,47 @@ def calc_third_point(seg):
 def seg_rot_90(seg_in, pivot_point=None):
     seg_center = seg_in - pivot_point
     mat_rot_90 = np.array([[0., -1.], [1., 0.]])
-    seg_rotated = np.dot(seg_center[:,0,:], mat_rot_90)
+    seg_rotated = np.dot(seg_center, mat_rot_90)
     seg_rotated += pivot_point
     return seg_rotated.astype('int')
 
 def ang_coeff(segment):
-    den = seg_longest[1,0,0] - seg_longest[0,0,0]
-    nom = seg_longest[1,0,1] - seg_longest[0,0,1]
-    ang_coeff = np.arctan(nom/den)
+    """
+    TODO: check this formula, I smell wrong
+    :param segment:
+    :return:
+    """
+    den = segment[1,0] - segment[0,0]
+    nom = segment[1,1] - segment[0,1]
+    if den != 0:
+        ang_coeff = np.arctan(nom/float(den))
+    else: # to prevent division by 0
+        ang_coeff = 2*np.pi/(1+np.exp(-nom))
     return ang_coeff
+    # return nom
 
+def length(segment):
+    dy = segment[1,1] - segment[0,1]
+    dx = segment[1,0] - segment[0,0]
+    return np.sqrt(dx**2+dy**2)
+
+def length_prod(segment):
+    dy = segment[1,1] - segment[0,1]
+    dx = segment[1,0] - segment[0,0]
+    return np.sqrt(dx**2+dy**2)
+
+# Here some hacking taken directly from stackoverflow
+def unit_vector(vector):
+    return vector / np.linalg.norm(vector)
+
+def angle_between(v1, v2):
+    v1_u = unit_vector(v1)
+    v2_u = unit_vector(v2)
+    v1_c = v1_u[1] - v1_u[0]
+    v2_c = v2_u[1] - v2_u[0]
+    # return 2*np.pi*np.arccos(np.clip(np.dot(v1_c, v2_c), -1.0, 1.0))
+    return np.dot(v1_c, v2_c)
+    # return np.clip(np.dot(v1_c, v2_c), -1.0, 1.0)
 
 # PROGRAM START
 
@@ -115,7 +152,11 @@ for c in cnts:
 idx_max = np.argmax(np.array(peris))
 # loop over the contours
 
-for c in cnts[idx_max:idx_max+1]:
+# Take only the interesting contour
+# for c in cnts[idx_max:idx_max+1]:
+for i in range(1):
+    # Get rid of this weird redundant opencv representation
+    c = np.array(cnts[idx_max][:,0])
     # compute the center of the contour, then detect the name of the
     # shape using only the contour
     M = cv2.moments(c)
@@ -130,7 +171,8 @@ for c in cnts[idx_max:idx_max+1]:
     x1 = approx[idx_longest-1, 0]
     x2 = approx[idx_longest, 0]
     # print approx[0]
-    seg_longest = approx[idx_longest-1:idx_longest+1]
+    seg_longest = approx[idx_longest-1:idx_longest+1,0]
+    print 'seg_longest:', seg_longest
     x_third = calc_third_point((x1, x2))
     x_t_display = ((x_third*ratio).astype('int'))
     # Display the circle
@@ -157,12 +199,94 @@ for c in cnts[idx_max:idx_max+1]:
 
     # Let's find the leftmost point on the contour
     # Which means we assume the tip of the foot is on the LEFT!!!
-    leftmost = c[np.argmin(c[:,0,0])] # We detect the lowest x value
+    leftmost = c[np.argmin(c[:,0])] # We detect the lowest x value
     print " Leftmost point on the high-poly contour: ", leftmost
     # produce a segment shifting seg_longest to the point just found
-    print "seg_longest       ",    seg_longest
-    print "leftmost          ",    leftmost
-    print "seg_longest - leftmost",seg_longest[0] - leftmost
+    lt_display = ((leftmost*ratio).astype('int'))
+    cv2.circle(final_display, (lt_display[0], lt_display[1]), 23, (0,0,255), -1)
+    delta_x = seg_longest[0] - leftmost
+    seg_ruler = seg_longest - delta_x
+    # Draw the segment as a test
+    cv2.drawContours(final_display, [(seg_ruler.astype('float')*ratio).astype('int')], -1, (0, 255, 0), 2)
+    # Now we find the other point of the contour on this line
+    # print "length:" ,length(seg_longest)
+    # print "length:" ,length(seg_ruler)
+    # print "test segments:\n", seg_longest[:,0], "\n", seg_ruler[:,0]
+    # print map(lambda x: length(x), np.array)
+    projections = []
+    distances = []
+    diff_ac = []
+    r_point = seg_ruler[1]
+    # Calculate distance and projections on main direction for each point in the foot contour
+    # Also calculate the delta in angular coefficient
+    for point in c:
+        # print "point:", point
+        # seg_tmp = np.array([leftmost,point])
+        seg_tmp = np.array([leftmost, point])
+        # print np.array([leftmost,point])
+        # length_tmp = np.linalg.norm(seg_tmp)
+        length_tmp = length(seg_tmp)
+        # print seg_tmp, length_tmp
+        distances.append(length_tmp)
+        # l_vec = np.array([leftmost,r_point])
+        # r_vec = np.array([leftmost,point])
+        # print point, leftmost, point - leftmost
+        # l_vec = np.array([[[0, 0]], r_point - leftmost])
+        # r_vec = np.array([[[0, 0]], point - leftmost])
+        # print r_vec
+        # proj_tmp = np.dot(l_vec[-1], r_vec[-1])
+        proj_tmp = np.inner(seg_ruler, seg_tmp)
+        len2 = np.linalg.norm(proj_tmp)
+        projections.append(len2)
+        # print seg_tmp
+        # ac_tmp = ang_coeff(seg_tmp)
+        # print seg_tmp
+        # print ac_tmp
+        # ac_tmp = angle_between(seg_tmp, seg_ruler)
+        # print l_vec[0,0], r_vec[0,0]
+        # ac_tmp = angle_between(l_vec[0], r_vec[0])
+        ac_tmp = angle_between(seg_ruler, seg_tmp)
+        seg_tmp_ct = point - leftmost
+        seg_r_ct = r_point - leftmost
+        ac_tmp = np.dot(seg_r_ct, seg_tmp_ct)/np.linalg.norm(seg_r_ct)/np.linalg.norm(seg_tmp_ct)
+        print "cenered points:", seg_tmp_ct, seg_r_ct, ac_tmp
+        diff_ac.append(ac_tmp) # - ang_c)
+
+    distances = np.array(distances)
+    projections = np.array(projections)
+    diff_ac = np.nan_to_num(np.array(diff_ac))
+    # print projections.shape
+    plt.plot(projections/np.max(projections), label='projections')
+    plt.plot(distances/np.max(distances), label='distances')
+    plt.plot(diff_ac/np.max(diff_ac), label='Delta angular coefficient')
+    plt.legend(loc='best')
+    # dot_prod = np.dot(seg_longest[:,0],seg_ruler[:,0])
+    # print "test dot:", dot_prod
+    # print "test len(dot):", length_prod(dot_prod)
+    # cont_prod = np.dot(c[:,0],leftmost.T)
+    # print cont_prod.shape
+    # print np.argmax(cont_prod)
+    # heel = c[np.argmax(projections)]
+    heel_idx = np.argmax(diff_ac)
+    heel = c[heel_idx]
+    pt_display = ((heel*ratio).astype('int'))
+    cv2.circle(final_display, (pt_display[0], pt_display[1]), 23, (0,0,255), -1)
+    # plt.plot(cont_prod)
+    # plt.show()
+
+    plt.figure()
+    plt.plot(leftmost[0], leftmost[1], '-o', linewidth=4)
+    plt.plot(c[:,0], c[:,1])
+    plt.plot(seg_ruler[:,0], seg_ruler[:,1], '-o')
+    plt.plot(heel[0], heel[1], '-o', linewidth=4)
+    heel0 = c[:heel_idx-1]
+    heel1 = c[heel_idx+1:]
+    # print heel0, heel1
+    # print heel0.shape, c.shape
+    # print heel0[:,0].shape, c[:,0].shape
+    # plt.plot(heel0[:,0], heel0[:,1], '-o', linewidth=4)
+    # plt.plot(heel1[:,0], heel1[:,1], '-o', linewidth=4)
+    plt.show()
 
 
 
@@ -192,7 +316,7 @@ for c in cnts[idx_max:idx_max+1]:
     (tlblX, tlblY) = midpoint(tl, bl)
     (trbrX, trbrY) = midpoint(tr, br)
     dB = dist.euclidean((tlblX, tlblY), (trbrX, trbrY))
-    scale_factor = dB / coin_dims['euro1']
+    scale_factor = dB / coin_dims['1 Euro']
     print "pixels per millimetre", scale_factor
 
     # draw the coin and the box around it 
