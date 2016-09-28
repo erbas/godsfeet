@@ -120,15 +120,21 @@ args = vars(ap.parse_args())
 # load the image and resize it to a smaller factor so that
 # the shapes can be approximated better
 image_tmp = cv2.imread(args["image"])
+# the original-size image is ditched and never used
 image = imutils.resize(image_tmp, width=1000)
+# This is a copy for the final display
 final_display = image
+# Invert the image for better detection (BG should be black)
 image = 255 - image
 
 # image = cv2.imread(args["image"])
+# The further resized image is usefule for
+# detecting the foot
 resized = imutils.resize(image, width=300)
 ratio = image.shape[0] / float(resized.shape[0])
 
 # find the coin
+# Better to use the bigger version of the image
 CD = CoinDetector(image)
 coins = CD.run()
 
@@ -182,20 +188,7 @@ for i in range(1):
     # t2_point = seg_longest[0]/3. + 2*seg_longest[1]/2.
     # t2_point = t2_point.astype('int')
     # cv2.circle(final_display, (t2_point[0], t2_point[1]), 23, (0,0,255), -1)
-    rows,cols,ch = image.shape
     # ang_c = ang_coeff(seg_longest)
-
-    # print "Angular coefficient: ", ang_c
-    # Here we try to make the longest segment horizontal by rotating the image (???)
-    # M = cv2.getRotationMatrix2D((x_third[0], x_third[1]),np.pi*ang_c,1)
-    # print M
-    # resized = cv2.warpAffine(resized,M,(cols,rows))
-    # cv2.imshow("Image", dst)
-    # cv2.waitKey(0)
-    # longst_seg = approx[i-1]
-    # midpoints = calc_midpoints(approx)
-
-    # print("Midpoints:", calc_midpoints(approx))
 
     # Let's find the leftmost point on the contour
     # Which means we assume the tip of the foot is on the LEFT!!!
@@ -272,7 +265,10 @@ for i in range(1):
 
     seg_foot_length = np.vstack((leftmost, heel))
     foot_length = np.linalg.norm(seg_foot_length)
+    print " Foot extremes:", leftmost, heel
     print " Foot length (in resized pixels units): ", foot_length
+    foot_length *= ratio
+    print " Foot length (in original pixels units): ", foot_length
 
     pt_display = ((heel*ratio).astype('int'))
     cv2.circle(final_display, (pt_display[0], pt_display[1]), 23, (0,0,255), -1)
@@ -323,6 +319,8 @@ for i in range(1):
     dB = dist.euclidean((tlblX, tlblY), (trbrX, trbrY))
     scale_factor = dB / coin_dims['1 Euro']
     print "pixels per millimetre", scale_factor
+    foot_length /= scale_factor
+    print "Actual foot length (cm):", foot_length/10
 
     # draw the coin and the box around it 
     cv2.drawContours(final_display, [box.astype("int")], -1, (255, 0, 0), 2)
