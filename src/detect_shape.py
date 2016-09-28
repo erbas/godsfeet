@@ -183,9 +183,9 @@ for i in range(1):
     # t2_point = t2_point.astype('int')
     # cv2.circle(final_display, (t2_point[0], t2_point[1]), 23, (0,0,255), -1)
     rows,cols,ch = image.shape
-    ang_c = ang_coeff(seg_longest)
+    # ang_c = ang_coeff(seg_longest)
 
-    print "Angular coefficient: ", ang_c
+    # print "Angular coefficient: ", ang_c
     # Here we try to make the longest segment horizontal by rotating the image (???)
     # M = cv2.getRotationMatrix2D((x_third[0], x_third[1]),np.pi*ang_c,1)
     # print M
@@ -249,11 +249,11 @@ for i in range(1):
         seg_tmp_ct = point - leftmost
         seg_r_ct = r_point - leftmost
         ac_tmp = np.dot(seg_r_ct, seg_tmp_ct)/np.linalg.norm(seg_r_ct)/np.linalg.norm(seg_tmp_ct)
-        print "cenered points:", seg_tmp_ct, seg_r_ct, ac_tmp
         diff_ac.append(ac_tmp) # - ang_c)
 
     distances = np.array(distances)
     projections = np.array(projections)
+    # Hre we also take care of nan
     diff_ac = np.nan_to_num(np.array(diff_ac))
     # print projections.shape
     plt.plot(projections/np.max(projections), label='projections')
@@ -269,6 +269,11 @@ for i in range(1):
     # heel = c[np.argmax(projections)]
     heel_idx = np.argmax(diff_ac)
     heel = c[heel_idx]
+
+    seg_foot_length = np.vstack((leftmost, heel))
+    foot_length = np.linalg.norm(seg_foot_length)
+    print " Foot length (in resized pixels units): ", foot_length
+
     pt_display = ((heel*ratio).astype('int'))
     cv2.circle(final_display, (pt_display[0], pt_display[1]), 23, (0,0,255), -1)
     # plt.plot(cont_prod)
@@ -286,7 +291,7 @@ for i in range(1):
     # print heel0[:,0].shape, c[:,0].shape
     # plt.plot(heel0[:,0], heel0[:,1], '-o', linewidth=4)
     # plt.plot(heel1[:,0], heel1[:,1], '-o', linewidth=4)
-    plt.show()
+    # plt.show()
 
 
 
