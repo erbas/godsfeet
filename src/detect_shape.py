@@ -10,12 +10,6 @@ from detect_coin import CoinDetector
 
 import matplotlib.pyplot as plt
 
-#  coin diameters in millimeters
-coin_dims = {
-    "2 Euro": 25.75,
-    "1 Euro": 23.25,
-    "50 Euro Cent": 24.25,
-}
 
 
 def midpoint(ptA, ptB):
@@ -109,8 +103,24 @@ def angle_between(v1, v2):
     return np.dot(v1_c, v2_c)
     # return np.clip(np.dot(v1_c, v2_c), -1.0, 1.0)
 
+def mynorm(z):
+    """
+    Apparently I can't find a numpy method that calculates
+    the norm as I want it, so here it is.
+    :param z:
+    :return:
+    """
+    dx = z[1,0] - z[0,0]
+    dy = z[1,1] - z[0,1]
+    return np.sqrt(dx**2 + dy**2)
 # PROGRAM START
 
+#  coin diameters in millimeters
+coin_dims = {
+    "2 Euro": 25.75,
+    "1 Euro": 23.25,
+    "50 Euro Cent": 24.25,
+}
 # construct the argument parse and parse the arguments
 ap = argparse.ArgumentParser()
 ap.add_argument("-i", "--image", required=True,
@@ -120,8 +130,9 @@ args = vars(ap.parse_args())
 # load the image and resize it to a smaller factor so that
 # the shapes can be approximated better
 image_tmp = cv2.imread(args["image"])
+print "Original image size:", image_tmp.shape
 # the original-size image is ditched and never used
-image = imutils.resize(image_tmp, width=1000)
+image = imutils.resize(image_tmp, width=1500)
 # This is a copy for the final display
 final_display = image
 # Invert the image for better detection (BG should be black)
@@ -264,7 +275,8 @@ for i in range(1):
     heel = c[heel_idx]
 
     seg_foot_length = np.vstack((leftmost, heel))
-    foot_length = np.linalg.norm(seg_foot_length)
+    # foot_length = np.linalg.norm(seg_foot_length)
+    foot_length = mynorm(seg_foot_length)
     print " Foot extremes:", leftmost, heel
     print " Foot length (in resized pixels units): ", foot_length
     foot_length *= ratio
@@ -318,9 +330,14 @@ for i in range(1):
     (trbrX, trbrY) = midpoint(tr, br)
     dB = dist.euclidean((tlblX, tlblY), (trbrX, trbrY))
     scale_factor = dB / coin_dims['1 Euro']
-    print "pixels per millimetre", scale_factor
+    print " pixels per millimetre", scale_factor
     foot_length /= scale_factor
-    print "Actual foot length (cm):", foot_length/10
+    x_box = np.linalg.norm(tl-tr)/scale_factor
+    y_box = np.linalg.norm(tl-bl)/scale_factor
+    print " Coin box size (mm): "+str(x_box)+" x "+str(y_box)
+    print " Actual foot length (cm):", foot_length/10
+    print " (NB: mine should be around 30 cm.)"
+    print " Foot size:", np.round(foot_length*.15)
 
     # draw the coin and the box around it 
     cv2.drawContours(final_display, [box.astype("int")], -1, (255, 0, 0), 2)
